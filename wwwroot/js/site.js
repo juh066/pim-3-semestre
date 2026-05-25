@@ -75,6 +75,40 @@ class NotificationManager {
 // Inicializar gerenciador global
 const notifications = new NotificationManager();
 
+async function readApiMessage(response, fallback) {
+    try {
+        const data = await response.json();
+        if (data.errors) {
+            const messages = Object.values(data.errors).flat();
+            if (messages.length > 0) {
+                return messages.join(' ');
+            }
+        }
+
+        return data.message || fallback;
+    } catch {
+        return fallback;
+    }
+}
+
+async function postJson(url, body = {}) {
+    return fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify(body)
+    });
+}
+
+function formatCurrency(value) {
+    return Number(value || 0).toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    });
+}
+
 // ============================================
 // USER PROFILE MANAGEMENT
 // ============================================
@@ -83,6 +117,10 @@ class UserProfileManager {
     constructor() {
         this.profileIcon = document.getElementById('userProfileIcon');
         this.userNameEl = document.getElementById('userName');
+        this.userInitialsEl = document.getElementById('userInitials');
+        this.userIconSvg = document.getElementById('userIconSvg');
+        this.loggedInActions = document.getElementById('loggedInActions');
+        this.authModalGrid = document.querySelector('.auth-modal-grid');
         this.logoutBtn = document.getElementById('logoutBtn');
         
         if (this.logoutBtn) {
@@ -97,13 +135,6 @@ class UserProfileManager {
      */
     saveUserProfile(name, isLogin = false) {
         if (name && name.trim()) {
-            localStorage.setItem('auroraUser', JSON.stringify({
-                name: name.trim(),
-                timestamp: new Date().toISOString(),
-                isLoggedIn: isLogin
-            }));
-            
-            // Só exibe o ícone se for login
             if (isLogin) {
                 this.displayUserProfile(name.trim());
             }
@@ -114,45 +145,104 @@ class UserProfileManager {
      * Carrega o perfil do usuário (ao abrir página)
      * Só exibe se estava com login anterior
      */
-    loadUserProfile() {
-        const userData = localStorage.getItem('auroraUser');
-        if (userData) {
-            try {
-                const user = JSON.parse(userData);
-                // Só mostra se tiver isLoggedIn = true
-                if (user.isLoggedIn) {
-                    this.displayUserProfile(user.name);
-                }
-            } catch (e) {
-                console.log('Erro ao carregar perfil:', e);
+    async loadUserProfile() {
+        try {
+            const response = await fetch('/auth/me', { credentials: 'same-origin' });
+            if (!response.ok) {
+                this.clearUserProfile();
+                return;
             }
+
+            const user = await response.json();
+            this.displayUserProfile(user.name);
+        } catch (e) {
+            console.log('Erro ao carregar perfil:', e);
+            this.clearUserProfile();
         }
     }
 
     /**
-     * Exibe o perfil do usuário (ícone fixo)
+     * Exibe o perfil do usuário no botão da navbar
      */
     displayUserProfile(name) {
         if (this.profileIcon && this.userNameEl) {
             this.userNameEl.textContent = name;
-            this.profileIcon.style.display = 'flex';
+            this.profileIcon.classList.add('is-logged-in');
+            this.profileIcon.setAttribute('aria-label', `Usuário conectado: ${name}`);
+            this.profileIcon.setAttribute('title', name);
         }
+
+        if (this.userInitialsEl) {
+            this.userInitialsEl.textContent = this.getInitials(name);
+        }
+
+        if (this.userIconSvg) {
+            this.userIconSvg.style.display = 'none';
+        }
+
+        if (this.loggedInActions) {
+            this.loggedInActions.hidden = false;
+        }
+
+        if (this.authModalGrid) {
+            this.authModalGrid.hidden = true;
+        }
+
+        window.cartManager?.load();
+    }
+
+    getInitials(name) {
+        return name
+            .trim()
+            .split(/\s+/)
+            .slice(0, 2)
+            .map(part => part.charAt(0).toUpperCase())
+            .join('');
     }
 
     /**
      * Remove o perfil do usuário (logout)
      */
     logout() {
+        this.logoutAsync();
+    }
+
+    async logoutAsync() {
         if (this.profileIcon) {
-            this.profileIcon.classList.add('hide-profile');
-            setTimeout(() => {
-                localStorage.removeItem('auroraUser');
-                this.profileIcon.style.display = 'none';
-                this.profileIcon.classList.remove('hide-profile');
-                this.userNameEl.textContent = '';
-                notifications.info('Você foi desconectado.');
-            }, 400);
+            await postJson('/auth/logout');
+            this.clearUserProfile();
+            notifications.info('Você foi desconectado.');
         }
+    }
+
+    clearUserProfile() {
+        if (this.profileIcon) {
+            this.profileIcon.classList.remove('is-logged-in');
+            this.profileIcon.setAttribute('aria-label', 'Abrir login e cadastro');
+            this.profileIcon.setAttribute('title', 'Login e Cadastro');
+        }
+
+        if (this.userNameEl) {
+            this.userNameEl.textContent = '';
+        }
+
+        if (this.userInitialsEl) {
+            this.userInitialsEl.textContent = '';
+        }
+
+        if (this.userIconSvg) {
+            this.userIconSvg.style.display = '';
+        }
+
+        if (this.loggedInActions) {
+            this.loggedInActions.hidden = true;
+        }
+
+        if (this.authModalGrid) {
+            this.authModalGrid.hidden = false;
+        }
+
+        window.cartManager?.clear();
     }
 }
 
@@ -160,22 +250,198 @@ class UserProfileManager {
 const userProfile = new UserProfileManager();
 
 // ============================================
+// SHOPPING CART
+// ============================================
+
+class CartManager {
+    constructor() {
+        this.button = document.getElementById('cartButton');
+        this.countEl = document.getElementById('cartCount');
+        this.drawer = document.getElementById('cartDrawer');
+        this.backdrop = document.getElementById('cartBackdrop');
+        this.closeButton = document.getElementById('cartCloseButton');
+        this.itemsEl = document.getElementById('cartItems');
+        this.emptyEl = document.getElementById('cartEmpty');
+        this.totalEl = document.getElementById('cartTotal');
+        this.checkoutButton = document.getElementById('cartCheckoutButton');
+
+        this.cart = { items: [], count: 0, total: 0 };
+
+        this.button?.addEventListener('click', () => this.open());
+        this.closeButton?.addEventListener('click', () => this.close());
+        this.backdrop?.addEventListener('click', () => this.close());
+        this.checkoutButton?.addEventListener('click', () => this.checkout());
+
+        this.load();
+    }
+
+    async load() {
+        try {
+            const response = await fetch('/cart', { credentials: 'same-origin' });
+            if (response.status === 401) {
+                this.clear();
+                return;
+            }
+
+            if (!response.ok) {
+                return;
+            }
+
+            this.render(await response.json());
+        } catch (e) {
+            console.log('Erro ao carregar carrinho:', e);
+        }
+    }
+
+    async add(product) {
+        const response = await postJson('/cart/items', product);
+
+        if (response.status === 401) {
+            notifications.error('❌ Faça login para adicionar produtos ao carrinho.');
+            const authModal = document.getElementById('authModal');
+            if (authModal) {
+                bootstrap.Modal.getOrCreateInstance(authModal).show();
+            }
+            return false;
+        }
+
+        if (!response.ok) {
+            notifications.error(await readApiMessage(response, 'Não foi possível adicionar o produto ao carrinho.'));
+            return false;
+        }
+
+        this.render(await response.json());
+        this.open();
+        return true;
+    }
+
+    async checkout() {
+        const response = await postJson('/cart/checkout');
+
+        if (response.status === 401) {
+            notifications.error('❌ Faça login para finalizar a compra.');
+            return;
+        }
+
+        if (!response.ok) {
+            notifications.error(await readApiMessage(response, 'Não foi possível finalizar a compra.'));
+            return;
+        }
+
+        this.render(await response.json());
+        notifications.success('✓ Compra finalizada com sucesso!');
+    }
+
+    open() {
+        if (this.drawer) {
+            this.drawer.classList.add('is-open');
+            this.drawer.setAttribute('aria-hidden', 'false');
+        }
+
+        if (this.backdrop) {
+            this.backdrop.hidden = false;
+            this.backdrop.classList.add('is-open');
+        }
+
+        this.load();
+    }
+
+    close() {
+        if (this.drawer) {
+            this.drawer.classList.remove('is-open');
+            this.drawer.setAttribute('aria-hidden', 'true');
+        }
+
+        if (this.backdrop) {
+            this.backdrop.classList.remove('is-open');
+            setTimeout(() => {
+                if (!this.backdrop.classList.contains('is-open')) {
+                    this.backdrop.hidden = true;
+                }
+            }, 200);
+        }
+    }
+
+    clear() {
+        this.render({ items: [], count: 0, total: 0 });
+    }
+
+    render(cart) {
+        this.cart = {
+            items: Array.from(cart.items || []),
+            count: cart.count || 0,
+            total: cart.total || 0
+        };
+
+        if (this.countEl) {
+            this.countEl.textContent = this.cart.count;
+            this.countEl.hidden = this.cart.count === 0;
+        }
+
+        if (this.totalEl) {
+            this.totalEl.textContent = formatCurrency(this.cart.total);
+        }
+
+        if (this.checkoutButton) {
+            this.checkoutButton.disabled = this.cart.count === 0;
+        }
+
+        if (this.emptyEl) {
+            this.emptyEl.hidden = this.cart.count > 0;
+        }
+
+        if (!this.itemsEl) {
+            return;
+        }
+
+        this.itemsEl.innerHTML = '';
+        this.cart.items.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'cart-item';
+
+            const details = document.createElement('div');
+            details.className = 'cart-item-details';
+
+            const name = document.createElement('strong');
+            name.textContent = item.productName;
+
+            const price = document.createElement('span');
+            price.textContent = `${item.quantity} x ${formatCurrency(item.unitPrice)}`;
+
+            const subtotal = document.createElement('span');
+            subtotal.className = 'cart-item-subtotal';
+            subtotal.textContent = formatCurrency(item.subtotal);
+
+            details.appendChild(name);
+            details.appendChild(price);
+            row.appendChild(details);
+            row.appendChild(subtotal);
+            this.itemsEl.appendChild(row);
+        });
+    }
+}
+
+// ============================================
 // EVENT LISTENERS PARA FORMULÁRIOS
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
+    window.cartManager = new CartManager();
+
     // Formulário de Cadastro - NÃO mostra ícone
     const registerForm = document.getElementById('registerForm');
     if (registerForm) {
-        registerForm.addEventListener('submit', function(e) {
+        registerForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             // Obter dados do formulário
             const nameInput = this.querySelector('input[type="text"]');
             const cpfInput = document.getElementById('cpfInput');
             const emailInput = this.querySelector('input[type="email"]');
+            const passwordInput = this.querySelector('input[type="password"]');
             const userName = nameInput ? nameInput.value : 'Usuário';
             const cpf = cpfInput ? cpfInput.value : '';
+            const password = passwordInput ? passwordInput.value : '';
             
             // Validar CPF
             if (!cpf || cpf.length !== 11) {
@@ -188,73 +454,85 @@ document.addEventListener('DOMContentLoaded', function() {
                 notifications.error('❌ CPF deve conter apenas números!');
                 return;
             }
+
+            if (password.length < 6) {
+                notifications.error('❌ A senha deve ter pelo menos 6 caracteres!');
+                return;
+            }
             
-            // Salvar APENAS como cadastro (não mostra ícone)
-            localStorage.setItem('auroraUserCadastro', JSON.stringify({
-                name: userName.trim(),
+            const response = await postJson('/auth/register', {
+                name: userName,
                 cpf: cpf,
                 email: emailInput ? emailInput.value : '',
-                timestamp: new Date().toISOString()
-            }));
-            
-            notifications.success('✓ Cadastro concluído com sucesso!');
-            setTimeout(() => registerForm.reset(), 500);
+                password: password
+            });
+
+            if (!response.ok) {
+                notifications.error(await readApiMessage(response, 'Não foi possível concluir o cadastro.'));
+                return;
+            }
+
+            notifications.success('✓ Cadastro concluído com sucesso! Faça login para continuar.');
+            registerForm.reset();
         });
     }
 
     // Formulário de Login - MOSTRA ícone
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
-        loginForm.addEventListener('submit', function(e) {
+        loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             // Obter o email 
             const emailInput = this.querySelector('input[type="email"]');
-            const email = emailInput ? emailInput.value : 'Usuário';
-            
-            // Verificar se tem cadastro anterior
-            const cadastroData = localStorage.getItem('auroraUserCadastro');
-            let userName = email.split('@')[0];
-            
-            if (cadastroData) {
-                try {
-                    const cadastro = JSON.parse(cadastroData);
-                    userName = cadastro.name;
-                } catch (e) {
-                    console.log('Erro ao ler cadastro:', e);
-                }
+            const passwordInput = this.querySelector('input[type="password"]');
+            const response = await postJson('/auth/login', {
+                email: emailInput ? emailInput.value : '',
+                password: passwordInput ? passwordInput.value : ''
+            });
+
+            if (!response.ok) {
+                notifications.error(await readApiMessage(response, 'Email ou senha incorretos.'));
+                return;
             }
             
-            // AGORA sim, salvar com isLoggedIn = true
-            userProfile.saveUserProfile(userName, true);
+            const user = await response.json();
+            userProfile.saveUserProfile(user.name, true);
+            window.cartManager?.load();
             
             notifications.success('✓ Login concluído com sucesso!');
-            setTimeout(() => loginForm.reset(), 500);
+            const authModal = document.getElementById('authModal');
+            const modalInstance = authModal ? bootstrap.Modal.getInstance(authModal) : null;
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+            loginForm.reset();
         });
     }
 
     // Função auxiliar: verificar se usuário está logado
-    function isUserLoggedIn() {
-        const userData = localStorage.getItem('auroraUser');
-        if (userData) {
-            try {
-                const user = JSON.parse(userData);
-                return user.isLoggedIn === true;
-            } catch (e) {
-                return false;
-            }
+    async function ensureAuthenticatedResponse(response, fallbackMessage) {
+        if (response.status === 401) {
+            notifications.error('❌ Você precisa estar logado para continuar!');
+            return false;
         }
-        return false;
+
+        if (!response.ok) {
+            notifications.error(await readApiMessage(response, fallbackMessage));
+            return false;
+        }
+
+        return true;
     }
 
     // Formulário de Compra de Ingressos - REQUER LOGIN
     const ticketForm = document.getElementById('ticketForm');
     if (ticketForm) {
-        ticketForm.addEventListener('submit', function(e) {
+        ticketForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            if (!isUserLoggedIn()) {
-                notifications.error('❌ Você precisa estar logado para comprar ingressos!');
+            const response = await postJson('/user-actions/tickets');
+            if (!await ensureAuthenticatedResponse(response, 'Não foi possível comprar o ingresso.')) {
                 return;
             }
             
@@ -266,11 +544,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Formulário de Agendamento de Visita - REQUER LOGIN
     const agendaForm = document.getElementById('agendaForm');
     if (agendaForm) {
-        agendaForm.addEventListener('submit', function(e) {
+        agendaForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            if (!isUserLoggedIn()) {
-                notifications.error('❌ Você precisa estar logado para agendar uma visita!');
+            const response = await postJson('/user-actions/appointments');
+            if (!await ensureAuthenticatedResponse(response, 'Não foi possível agendar a visita.')) {
                 return;
             }
             
@@ -282,15 +560,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // Botões de compra da loja - REQUER LOGIN
     const shopButtons = document.querySelectorAll('.product button');
     shopButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
+        button.addEventListener('click', async function(e) {
             e.preventDefault();
-            
-            if (!isUserLoggedIn()) {
-                notifications.error('❌ Você precisa estar logado para comprar na loja!');
+
+            const product = this.closest('.product');
+            const productName = product.dataset.productName || product.querySelector('h3').textContent;
+            const added = await window.cartManager?.add({
+                productId: Number(product.dataset.productId),
+                productName,
+                unitPrice: Number(product.dataset.productPrice)
+            });
+
+            if (!added) {
                 return;
             }
-            
-            const productName = this.closest('.product').querySelector('h3').textContent;
+
             notifications.success(`✓ ${productName} adicionado ao carrinho!`);
         });
     });

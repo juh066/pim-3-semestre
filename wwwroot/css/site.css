@@ -10,6 +10,10 @@ body {
     color: #1C1C1E;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 /* User Profile Icon - Fixed Position (appears after login only) */
 .user-profile-icon-fixed {
     position: fixed;
@@ -174,6 +178,323 @@ header {
 .navbar-brand,
 .nav-link {
     color: #1C1C1E !important;
+}
+
+.navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.navbar-icon-button {
+    width: 42px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    padding: 0;
+    color: #1C1C1E;
+    text-decoration: none;
+    border: 0;
+    background: transparent;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.navbar-icon-button svg {
+    width: 21px;
+    height: 21px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.navbar-icon-button:hover,
+.navbar-icon-button:focus-visible {
+    background: #C9A84C;
+    color: #1C1C1E;
+    transform: translateY(-1px);
+    outline: none;
+}
+
+.cart-navbar-button {
+    position: relative;
+}
+
+.cart-count {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #1C1C1E;
+    color: #F5F0E8;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1;
+    border: 2px solid #FFFFFF;
+}
+
+.navbar-user-button {
+    min-width: 42px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 12px;
+    border: 1px solid rgba(28,28,30,0.14);
+    border-radius: 8px;
+    background: #FFFFFF;
+    color: #1C1C1E;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.navbar-user-button svg {
+    width: 21px;
+    height: 21px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.navbar-user-button:hover,
+.navbar-user-button:focus-visible {
+    background: #C9A84C;
+    border-color: #C9A84C;
+    color: #1C1C1E;
+    transform: translateY(-1px);
+    outline: none;
+}
+
+.navbar-user-button.is-logged-in {
+    background: #C9A84C;
+    border-color: #C9A84C;
+    font-weight: 700;
+}
+
+.user-initials {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #1C1C1E;
+    color: #F5F0E8;
+    font-size: 0.75rem;
+    line-height: 1;
+}
+
+.navbar-user-button.is-logged-in .user-initials {
+    display: inline-flex;
+}
+
+.user-name-label {
+    display: none;
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.navbar-user-button.is-logged-in .user-name-label {
+    display: inline-block;
+}
+
+.auth-modal-content {
+    background: #F5F0E8;
+    color: #1C1C1E;
+    border: 1px solid rgba(28,28,30,0.12);
+    border-radius: 8px;
+}
+
+.auth-modal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.auth-panel {
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.1);
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(28,28,30,0.08);
+}
+
+.auth-panel h3 {
+    margin-bottom: 18px;
+    font-size: 1.3rem;
+}
+
+.logged-in-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 18px;
+    padding: 16px 20px;
+    border-radius: 8px;
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.1);
+}
+
+.logged-in-actions button {
+    width: auto;
+    padding: 10px 18px;
+}
+
+.cart-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1040;
+    background: rgba(28, 28, 30, 0.45);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.cart-backdrop.is-open {
+    opacity: 1;
+}
+
+.cart-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 1045;
+    width: min(390px, 100vw);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #FFFFFF;
+    color: #1C1C1E;
+    box-shadow: -18px 0 40px rgba(28, 28, 30, 0.18);
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+}
+
+.cart-drawer.is-open {
+    transform: translateX(0);
+}
+
+.cart-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 24px;
+    border-bottom: 1px solid rgba(28,28,30,0.12);
+}
+
+.cart-drawer-header h2 {
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+.cart-close-button {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: transparent;
+    color: #1C1C1E;
+}
+
+.cart-close-button svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+}
+
+.cart-items {
+    flex: 1;
+    overflow: auto;
+    padding: 18px 24px;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(28,28,30,0.1);
+}
+
+.cart-item-details {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.cart-item-details span,
+.cart-item-subtotal {
+    color: #5E5E63;
+    font-size: 0.92rem;
+}
+
+.cart-item-subtotal {
+    white-space: nowrap;
+    font-weight: 700;
+    color: #8A7346;
+}
+
+.cart-empty {
+    margin: 24px;
+    padding: 18px;
+    border: 1px dashed rgba(28,28,30,0.2);
+    border-radius: 8px;
+    color: #5E5E63;
+    text-align: center;
+}
+
+.cart-drawer-footer {
+    padding: 18px 24px 24px;
+    border-top: 1px solid rgba(28,28,30,0.12);
+    background: #F5F0E8;
+}
+
+.cart-total-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    font-size: 1rem;
+}
+
+.cart-total-row strong {
+    font-size: 1.15rem;
+}
+
+.cart-drawer-footer button {
+    width: 100%;
+}
+
+.cart-drawer-footer button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+#comprar-ingressos,
+#agendar-visita,
+#lojinha {
+    scroll-margin-top: 90px;
 }
 
 .hero {
@@ -533,5 +854,21 @@ footer p {
 
     .card img {
         height: 250px;
+    }
+}
+
+@media(max-width: 575px) {
+    .navbar-actions {
+        justify-content: flex-start;
+        margin-left: 0;
+        padding: 10px 0 4px;
+    }
+
+    .user-name-label {
+        max-width: 95px;
+    }
+
+    .auth-modal-grid {
+        grid-template-columns: 1fr;
     }
 }

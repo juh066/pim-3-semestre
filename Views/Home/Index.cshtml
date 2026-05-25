@@ -29,7 +29,7 @@
     </div>
 </section>
 
-<section class="tickets">
+<section id="comprar-ingressos" class="tickets">
     <div class="ticket-box">
         <h2>Comprar Ingressos</h2>
 
@@ -42,7 +42,7 @@
     </div>
 </section>
 
-<section class="agenda">
+<section id="agendar-visita" class="agenda">
     <h2>Agendar Visita</h2>
 
     <form id="agendaForm" class="agenda-form">
@@ -52,56 +52,32 @@
         <button type="submit">Agendar</button>
     </form>
 </section>
-<section class="shop">
+<section id="lojinha" class="shop">
     <h2>Lojinha</h2>
 
     <div class="shop-grid">
-        <div class="product">
-            <img src="/images/caneca.jpg">
+        <div class="product" data-product-id="1" data-product-name="Caneca Aurora" data-product-price="49.90">
+            <img src="/images/caneca.jpg" alt="Caneca Aurora">
             <h3>Caneca Aurora</h3>
             <p>R$ 49,90</p>
             <button type="button">Comprar</button>
         </div>
 
-        <div class="product">
-            <img src="/images/totebag.jpg">
+        <div class="product" data-product-id="2" data-product-name="Tote Bag" data-product-price="69.90">
+            <img src="/images/totebag.jpg" alt="Tote Bag">
             <h3>Tote Bag</h3>
             <p>R$ 69,90</p>
             <button type="button">Comprar</button>
         </div>
 
-        <div class="product">
-            <img src="/images/caderno.jpg">
+        <div class="product" data-product-id="3" data-product-name="Caderno Artístico" data-product-price="39.90">
+            <img src="/images/caderno.jpg" alt="Caderno Artístico">
             <h3>Caderno Artístico</h3>
             <p>R$ 39,90</p>
             <button type="button">Comprar</button>
         </div>
     </div>
 </section>
-<section class="login-section">
-    <div class="login-box">
-        <h2>Login</h2>
-
-        <form id="loginForm">
-            <input type="email" placeholder="Email" required>
-            <input type="password" placeholder="Senha" required>
-            <button type="submit">Entrar</button>
-        </form>
-    </div>
-
-    <div class="register-box">
-        <h2>Cadastro</h2>
-
-        <form id="registerForm">
-            <input type="text" placeholder="Nome" required>
-            <input type="text" placeholder="CPF (11 dígitos)" id="cpfInput" maxlength="11" required>
-            <input type="email" placeholder="Email" required>
-            <input type="password" placeholder="Senha" required>
-            <button type="submit">Cadastrar</button>
-        </form>
-    </div>
-</section>
-
 <footer>
     <p>Galeria Aurora © 2026 — Arte contemporânea para todos.</p>
 </footer>

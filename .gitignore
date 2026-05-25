@@ -8,3 +8,12 @@ obj/
 *.rsuser
 
 appsettings.*.local.json
+
+*.db
+*.db-shm
+*.db-wal
+DataProtectionKeys/
+
+.codex-appdata*/
+.codex-localappdata*/
+.codex-temp/
