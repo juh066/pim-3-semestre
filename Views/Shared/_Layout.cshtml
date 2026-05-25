@@ -118,8 +118,22 @@
                         </div>
                     </div>
                     <div id="loggedInActions" class="logged-in-actions" hidden>
-                        <span>Você está conectado.</span>
-                        <button id="logoutBtn" type="button">Sair</button>
+                        <div class="account-summary">
+                            <span>Você está conectado.</span>
+                            <button id="logoutBtn" type="button">Sair</button>
+                        </div>
+                        <div class="user-records-grid">
+                            <section class="user-records-panel" aria-labelledby="userTicketsTitle">
+                                <h3 id="userTicketsTitle">Meus Ingressos</h3>
+                                <div id="userTicketsList" class="user-records-list"></div>
+                                <p id="userTicketsEmpty" class="user-records-empty">Você ainda não comprou ingressos.</p>
+                            </section>
+                            <section class="user-records-panel" aria-labelledby="userAppointmentsTitle">
+                                <h3 id="userAppointmentsTitle">Meus Agendamentos</h3>
+                                <div id="userAppointmentsList" class="user-records-list"></div>
+                                <p id="userAppointmentsEmpty" class="user-records-empty">Você ainda não tem visitas agendadas.</p>
+                            </section>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -30,6 +30,42 @@ namespace AuroraGaleria.Data
                     CREATE UNIQUE INDEX IF NOT EXISTS IX_cart_items_UserId_ProductId
                     ON cart_items (UserId, ProductId);
                     """);
+                db.Database.ExecuteSqlRaw(
+                    """
+                    CREATE TABLE IF NOT EXISTS user_tickets (
+                        Id INTEGER NOT NULL CONSTRAINT PK_user_tickets PRIMARY KEY AUTOINCREMENT,
+                        UserId INTEGER NOT NULL,
+                        EventName TEXT NOT NULL,
+                        EventDate TEXT NOT NULL,
+                        Quantity INTEGER NOT NULL,
+                        Status TEXT NOT NULL,
+                        CreatedAt TEXT NOT NULL,
+                        CONSTRAINT FK_user_tickets_Users_UserId FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE
+                    );
+                    """);
+                db.Database.ExecuteSqlRaw(
+                    """
+                    CREATE INDEX IF NOT EXISTS IX_user_tickets_UserId
+                    ON user_tickets (UserId);
+                    """);
+                db.Database.ExecuteSqlRaw(
+                    """
+                    CREATE TABLE IF NOT EXISTS user_appointments (
+                        Id INTEGER NOT NULL CONSTRAINT PK_user_appointments PRIMARY KEY AUTOINCREMENT,
+                        UserId INTEGER NOT NULL,
+                        EventName TEXT NOT NULL,
+                        AppointmentDate TEXT NOT NULL,
+                        Quantity INTEGER NOT NULL,
+                        Status TEXT NOT NULL,
+                        CreatedAt TEXT NOT NULL,
+                        CONSTRAINT FK_user_appointments_Users_UserId FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE
+                    );
+                    """);
+                db.Database.ExecuteSqlRaw(
+                    """
+                    CREATE INDEX IF NOT EXISTS IX_user_appointments_UserId
+                    ON user_appointments (UserId);
+                    """);
 
                 return true;
             }

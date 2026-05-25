@@ -109,6 +109,15 @@ function formatCurrency(value) {
     });
 }
 
+function formatDate(value) {
+    if (!value) {
+        return '';
+    }
+
+    const [year, month, day] = value.split('-').map(Number);
+    return new Date(year, month - 1, day).toLocaleDateString('pt-BR');
+}
+
 // ============================================
 // USER PROFILE MANAGEMENT
 // ============================================
@@ -125,6 +134,15 @@ class UserProfileManager {
         
         if (this.logoutBtn) {
             this.logoutBtn.addEventListener('click', () => this.logout());
+        }
+
+        const authModal = document.getElementById('authModal');
+        if (authModal) {
+            authModal.addEventListener('shown.bs.modal', () => {
+                if (this.profileIcon?.classList.contains('is-logged-in')) {
+                    window.userRecordsManager?.load();
+                }
+            });
         }
         
         this.loadUserProfile();
@@ -189,6 +207,7 @@ class UserProfileManager {
         }
 
         window.cartManager?.load();
+        window.userRecordsManager?.load();
     }
 
     getInitials(name) {
@@ -243,11 +262,102 @@ class UserProfileManager {
         }
 
         window.cartManager?.clear();
+        window.userRecordsManager?.clear();
     }
 }
 
 // Inicializar gerenciador de perfil global
 const userProfile = new UserProfileManager();
+
+class UserRecordsManager {
+    constructor() {
+        this.ticketsList = document.getElementById('userTicketsList');
+        this.ticketsEmpty = document.getElementById('userTicketsEmpty');
+        this.appointmentsList = document.getElementById('userAppointmentsList');
+        this.appointmentsEmpty = document.getElementById('userAppointmentsEmpty');
+    }
+
+    async load() {
+        await Promise.all([
+            this.loadList('/user-actions/tickets', this.ticketsList, this.ticketsEmpty, 'ingresso'),
+            this.loadList('/user-actions/appointments', this.appointmentsList, this.appointmentsEmpty, 'agendamento')
+        ]);
+    }
+
+    async loadList(url, listEl, emptyEl, type) {
+        if (!listEl || !emptyEl) {
+            return;
+        }
+
+        try {
+            const response = await fetch(url, { credentials: 'same-origin' });
+            if (response.status === 401) {
+                this.clear();
+                return;
+            }
+
+            if (!response.ok) {
+                listEl.innerHTML = '';
+                emptyEl.textContent = `Não foi possível carregar seus ${type}s agora.`;
+                emptyEl.hidden = false;
+                return;
+            }
+
+            this.renderList(await response.json(), listEl, emptyEl);
+        } catch {
+            listEl.innerHTML = '';
+            emptyEl.textContent = `Não foi possível carregar seus ${type}s agora.`;
+            emptyEl.hidden = false;
+        }
+    }
+
+    renderList(items, listEl, emptyEl) {
+        listEl.innerHTML = '';
+        emptyEl.hidden = items.length > 0;
+
+        items.forEach(item => {
+            const row = document.createElement('article');
+            row.className = 'user-record-card';
+
+            const content = document.createElement('div');
+            content.className = 'user-record-content';
+
+            const title = document.createElement('strong');
+            title.textContent = item.eventName;
+
+            const meta = document.createElement('span');
+            meta.textContent = `${formatDate(item.date)} • Quantidade: ${item.quantity}`;
+
+            const status = document.createElement('span');
+            status.className = `user-record-status ${item.status === 'past' ? 'is-past' : 'is-available'}`;
+            status.textContent = item.status === 'past' ? 'Indisponível / passado' : 'Disponível';
+
+            content.appendChild(title);
+            content.appendChild(meta);
+            row.appendChild(content);
+            row.appendChild(status);
+            listEl.appendChild(row);
+        });
+    }
+
+    clear() {
+        if (this.ticketsList) {
+            this.ticketsList.innerHTML = '';
+        }
+
+        if (this.appointmentsList) {
+            this.appointmentsList.innerHTML = '';
+        }
+
+        if (this.ticketsEmpty) {
+            this.ticketsEmpty.hidden = false;
+        }
+
+        if (this.appointmentsEmpty) {
+            this.appointmentsEmpty.hidden = false;
+        }
+    }
+}
 
 // ============================================
 // SHOPPING CART
@@ -426,6 +536,7 @@ class CartManager {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
+    window.userRecordsManager = new UserRecordsManager();
     window.cartManager = new CartManager();
 
     // Formulário de Cadastro - NÃO mostra ícone
@@ -531,12 +642,21 @@ document.addEventListener('DOMContentLoaded', function() {
         ticketForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const response = await postJson('/user-actions/tickets');
+            const nameInput = this.querySelector('input[type="text"]');
+            const dateInput = this.querySelector('input[type="date"]');
+            const quantityInput = this.querySelector('input[type="number"]');
+            const response = await postJson('/user-actions/tickets', {
+                visitorName: nameInput ? nameInput.value : '',
+                visitDate: dateInput ? dateInput.value : '',
+                quantity: quantityInput ? Number(quantityInput.value) : 1,
+                eventName: 'Galeria Aurora'
+            });
             if (!await ensureAuthenticatedResponse(response, 'Não foi possível comprar o ingresso.')) {
                 return;
             }
             
             notifications.success('✓ Ingresso comprado com sucesso!');
+            window.userRecordsManager?.load();
             setTimeout(() => ticketForm.reset(), 500);
         });
     }
@@ -547,12 +667,21 @@ document.addEventListener('DOMContentLoaded', function() {
         agendaForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const response = await postJson('/user-actions/appointments');
+            const nameInput = this.querySelector('input[type="text"]');
+            const emailInput = this.querySelector('input[type="email"]');
+            const dateInput = this.querySelector('input[type="date"]');
+            const response = await postJson('/user-actions/appointments', {
+                visitorName: nameInput ? nameInput.value : '',
+                email: emailInput ? emailInput.value : '',
+                visitDate: dateInput ? dateInput.value : '',
+                eventName: 'Visita à Galeria Aurora'
+            });
             if (!await ensureAuthenticatedResponse(response, 'Não foi possível agendar a visita.')) {
                 return;
             }
             
             notifications.success('✓ Visita agendada com sucesso!');
+            window.userRecordsManager?.load();
             setTimeout(() => agendaForm.reset(), 500);
         });
     }
