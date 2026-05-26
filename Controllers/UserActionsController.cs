@@ -184,6 +184,10 @@ namespace AuroraGaleria.Controllers
                 .ToListAsync();
 
             var ingressosPorExposicao = await _db.UserTickets
+                .Where(ticket =>
+                    ticket.EventName == "Arte Contemporânea" ||
+                    ticket.EventName == "Modernismo Brasileiro" ||
+                    ticket.EventName == "Fotografia Urbana")
                 .GroupBy(ticket => ticket.EventName)
                 .Select(group => new
                 {
