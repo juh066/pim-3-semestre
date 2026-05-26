@@ -20,26 +20,26 @@ namespace AuroraGaleria.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetCart()
+        public async Task<IActionResult> VerCarrinho()
         {
-            var userId = GetUserId();
+            var userId = UsuarioId();
             var items = await _db.CartItems
                 .Where(item => item.UserId == userId)
                 .OrderBy(item => item.CreatedAt)
                 .ToListAsync();
 
-            return Ok(ToCartResponse(items));
+            return Ok(MontarCarrinho(items));
         }
 
         [HttpPost("items")]
-        public async Task<IActionResult> AddItem(AddCartItemRequest request)
+        public async Task<IActionResult> AdicionarItem(AddCartItemRequest request)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new { message = "Produto inválido para o carrinho." });
             }
 
-            var userId = GetUserId();
+            var userId = UsuarioId();
             var item = await _db.CartItems
                 .SingleOrDefaultAsync(cartItem => cartItem.UserId == userId && cartItem.ProductId == request.ProductId);
 
@@ -71,13 +71,13 @@ namespace AuroraGaleria.Controllers
                 .OrderBy(cartItem => cartItem.CreatedAt)
                 .ToListAsync();
 
-            return Ok(ToCartResponse(items));
+            return Ok(MontarCarrinho(items));
         }
 
         [HttpPost("checkout")]
         public async Task<IActionResult> Checkout()
         {
-            var userId = GetUserId();
+            var userId = UsuarioId();
             var items = await _db.CartItems
                 .Where(item => item.UserId == userId)
                 .ToListAsync();
@@ -100,13 +100,13 @@ namespace AuroraGaleria.Controllers
             _db.CartItems.RemoveRange(items);
             await _db.SaveChangesAsync();
 
-            return Ok(ToCartResponse(Array.Empty<CartItem>()));
+            return Ok(MontarCarrinho(Array.Empty<CartItem>()));
         }
 
         [HttpDelete("items/{id:int}")]
-        public async Task<IActionResult> RemoveItem(int id)
+        public async Task<IActionResult> RemoverItem(int id)
         {
-            var userId = GetUserId();
+            var userId = UsuarioId();
             var item = await _db.CartItems
                 .SingleOrDefaultAsync(cartItem => cartItem.Id == id && cartItem.UserId == userId);
 
@@ -123,15 +123,15 @@ namespace AuroraGaleria.Controllers
                 .OrderBy(cartItem => cartItem.CreatedAt)
                 .ToListAsync();
 
-            return Ok(ToCartResponse(items));
+            return Ok(MontarCarrinho(items));
         }
 
-        private int GetUserId()
+        private int UsuarioId()
         {
             return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
         }
 
-        private static object ToCartResponse(IReadOnlyCollection<CartItem> items)
+        private static object MontarCarrinho(IReadOnlyCollection<CartItem> items)
         {
             return new
             {

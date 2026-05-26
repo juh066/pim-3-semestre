@@ -20,9 +20,9 @@ namespace AuroraGaleria.Controllers
         }
 
         [HttpGet("tickets")]
-        public async Task<IActionResult> GetTickets()
+        public async Task<IActionResult> MeusIngressos()
         {
-            var userId = GetUserId();
+            var userId = UsuarioId();
             var today = DateTime.Today;
             var tickets = await _db.UserTickets
                 .Where(ticket => ticket.UserId == userId)
@@ -40,14 +40,14 @@ namespace AuroraGaleria.Controllers
         }
 
         [HttpPost("tickets")]
-        public async Task<IActionResult> BuyTicket(BuyTicketRequest request)
+        public async Task<IActionResult> ComprarIngresso(BuyTicketRequest request)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new { message = "Preencha a data e a quantidade do ingresso corretamente." });
             }
 
-            var userId = GetUserId();
+            var userId = UsuarioId();
             var ticket = new UserTicket
             {
                 UserId = userId,
@@ -65,9 +65,9 @@ namespace AuroraGaleria.Controllers
         }
 
         [HttpGet("appointments")]
-        public async Task<IActionResult> GetAppointments()
+        public async Task<IActionResult> MeusAgendamentos()
         {
-            var userId = GetUserId();
+            var userId = UsuarioId();
             var today = DateTime.Today;
             var appointments = await _db.UserAppointments
                 .Where(appointment => appointment.UserId == userId)
@@ -85,14 +85,14 @@ namespace AuroraGaleria.Controllers
         }
 
         [HttpPost("appointments")]
-        public async Task<IActionResult> ScheduleVisit(ScheduleAppointmentRequest request)
+        public async Task<IActionResult> AgendarVisita(ScheduleAppointmentRequest request)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new { message = "Preencha os dados do agendamento corretamente." });
             }
 
-            var userId = GetUserId();
+            var userId = UsuarioId();
             var appointment = new UserAppointment
             {
                 UserId = userId,
@@ -110,9 +110,9 @@ namespace AuroraGaleria.Controllers
         }
 
         [HttpGet("purchases")]
-        public async Task<IActionResult> GetPurchases()
+        public async Task<IActionResult> MinhasCompras()
         {
-            var userId = GetUserId();
+            var userId = UsuarioId();
             var purchases = await _db.UserPurchases
                 .Where(purchase => purchase.UserId == userId)
                 .OrderByDescending(purchase => purchase.CreatedAt)
@@ -130,7 +130,7 @@ namespace AuroraGaleria.Controllers
             }));
         }
 
-        private int GetUserId()
+        private int UsuarioId()
         {
             return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
         }

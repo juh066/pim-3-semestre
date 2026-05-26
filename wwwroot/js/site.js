@@ -1,21 +1,11 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
+﻿// Avisos simples usados nas ações do site.
 
-// ============================================
-// NOTIFICATION SYSTEM
-// ============================================
 
-class NotificationManager {
+class Avisos {
     constructor() {
         this.container = document.getElementById('notificationContainer');
     }
 
-    /**
-     * Exibe uma notificação na tela
-     * @param {string} message - Mensagem a exibir
-     * @param {string} type - Tipo de notificação: 'success', 'error', 'warning', 'info'
-     * @param {number} duration - Duração em ms (0 = infinito)
-     */
     show(message, type = 'info', duration = 4000) {
         const notification = document.createElement('div');
         notification.className = `notification-banner ${type}`;
@@ -43,12 +33,9 @@ class NotificationManager {
     }
 
     cleanMessage(message) {
-        return String(message || '').replace(/^[✓✔✕×✖❌]\s*/u, '');
+        return String(message || '').replace(/^[^\p{L}\p{N}]+\s*/u, '');
     }
 
-    /**
-     * Remove uma notificação com animação
-     */
     remove(notification) {
         notification.classList.add('hide');
         setTimeout(() => {
@@ -58,7 +45,6 @@ class NotificationManager {
         }, 400);
     }
 
-    // Métodos de conveniência para cada tipo
     success(message, duration = 4000) {
         return this.show(message, 'success', duration);
     }
@@ -76,8 +62,7 @@ class NotificationManager {
     }
 }
 
-// Inicializar gerenciador global
-const notifications = new NotificationManager();
+const avisos = new Avisos();
 
 async function readApiMessage(response, fallback) {
     try {
@@ -122,11 +107,9 @@ function formatDate(value) {
     return new Date(year, month - 1, day).toLocaleDateString('pt-BR');
 }
 
-// ============================================
-// USER PROFILE MANAGEMENT
-// ============================================
+// Perfil e dados do usuário logado.
 
-class UserProfileManager {
+class PerfilUsuario {
     constructor() {
         this.profileIcon = document.getElementById('userProfileIcon');
         this.userNameEl = document.getElementById('userName');
@@ -144,7 +127,7 @@ class UserProfileManager {
         if (authModal) {
             authModal.addEventListener('shown.bs.modal', () => {
                 if (this.profileIcon?.classList.contains('is-logged-in')) {
-                    window.userRecordsManager?.load();
+                    window.registrosUsuario?.load();
                 }
             });
         }
@@ -210,8 +193,8 @@ class UserProfileManager {
             this.authModalGrid.hidden = true;
         }
 
-        window.cartManager?.load();
-        window.userRecordsManager?.load();
+        window.carrinho?.load();
+        window.registrosUsuario?.load();
     }
 
     getInitials(name) {
@@ -234,7 +217,7 @@ class UserProfileManager {
         if (this.profileIcon) {
             await postJson('/auth/logout');
             this.clearUserProfile();
-            notifications.info('Você foi desconectado.');
+            avisos.info('Você foi desconectado.');
         }
     }
 
@@ -265,15 +248,15 @@ class UserProfileManager {
             this.authModalGrid.hidden = false;
         }
 
-        window.cartManager?.clear();
-        window.userRecordsManager?.clear();
+        window.carrinho?.clear();
+        window.registrosUsuario?.clear();
     }
 }
 
 // Inicializar gerenciador de perfil global
-const userProfile = new UserProfileManager();
+const perfilUsuario = new PerfilUsuario();
 
-class UserRecordsManager {
+class RegistrosUsuario {
     constructor() {
         this.ticketsList = document.getElementById('userTicketsList');
         this.ticketsEmpty = document.getElementById('userTicketsEmpty');
@@ -472,7 +455,7 @@ class UserRecordsManager {
     }
 }
 
-class PaymentManager {
+class Pagamento {
     constructor() {
         this.modalEl = document.getElementById('paymentModal');
         this.form = document.getElementById('paymentForm');
@@ -520,7 +503,7 @@ class PaymentManager {
             this.confirmButton.disabled = true;
         }
 
-        const completed = await window.cartManager?.completeCheckout();
+        const completed = await window.carrinho?.completeCheckout();
 
         if (this.confirmButton) {
             this.confirmButton.disabled = false;
@@ -531,7 +514,7 @@ class PaymentManager {
         }
 
         bootstrap.Modal.getOrCreateInstance(this.modalEl).hide();
-        window.cartManager?.close();
+        window.carrinho?.close();
         this.form?.reset();
         this.updateCardIcon('');
     }
@@ -637,11 +620,9 @@ class PaymentManager {
     }
 }
 
-// ============================================
-// SHOPPING CART
-// ============================================
+// Carrinho de compras.
 
-class CartManager {
+class Carrinho {
     constructor() {
         this.button = document.getElementById('cartButton');
         this.countEl = document.getElementById('cartCount');
@@ -685,7 +666,7 @@ class CartManager {
         const response = await postJson('/cart/items', product);
 
         if (response.status === 401) {
-            notifications.error('Faça login para adicionar produtos ao carrinho.');
+            avisos.error('Faça login para adicionar produtos ao carrinho.');
             const authModal = document.getElementById('authModal');
             if (authModal) {
                 bootstrap.Modal.getOrCreateInstance(authModal).show();
@@ -694,7 +675,7 @@ class CartManager {
         }
 
         if (!response.ok) {
-            notifications.error(await readApiMessage(response, 'Não foi possível adicionar o produto ao carrinho.'));
+            avisos.error(await readApiMessage(response, 'Não foi possível adicionar o produto ao carrinho.'));
             return false;
         }
 
@@ -704,25 +685,25 @@ class CartManager {
     }
 
     async checkout() {
-        window.paymentManager?.open();
+        window.pagamento?.open();
     }
 
     async completeCheckout() {
         const response = await postJson('/cart/checkout');
 
         if (response.status === 401) {
-            notifications.error('Faça login para finalizar a compra.');
+            avisos.error('Faça login para finalizar a compra.');
             return false;
         }
 
         if (!response.ok) {
-            notifications.error(await readApiMessage(response, 'Não foi possível finalizar a compra.'));
+            avisos.error(await readApiMessage(response, 'Não foi possível finalizar a compra.'));
             return false;
         }
 
         this.render(await response.json());
-        window.userRecordsManager?.load();
-        notifications.success('Compra finalizada com sucesso!');
+        window.registrosUsuario?.load();
+        avisos.success('Compra finalizada com sucesso!');
         return true;
     }
 
@@ -733,12 +714,12 @@ class CartManager {
         });
 
         if (response.status === 401) {
-            notifications.error('Faça login para remover produtos do carrinho.');
+            avisos.error('Faça login para remover produtos do carrinho.');
             return;
         }
 
         if (!response.ok) {
-            notifications.error(await readApiMessage(response, 'Não foi possível remover o produto do carrinho.'));
+            avisos.error(await readApiMessage(response, 'Não foi possível remover o produto do carrinho.'));
             return;
         }
 
@@ -853,14 +834,12 @@ class CartManager {
     }
 }
 
-// ============================================
-// EVENT LISTENERS PARA FORMULÁRIOS
-// ============================================
+// Formulários da página.
 
 document.addEventListener('DOMContentLoaded', function() {
-    window.userRecordsManager = new UserRecordsManager();
-    window.paymentManager = new PaymentManager();
-    window.cartManager = new CartManager();
+    window.registrosUsuario = new RegistrosUsuario();
+    window.pagamento = new Pagamento();
+    window.carrinho = new Carrinho();
 
     // Formulário de Cadastro - NÃO mostra ícone
     const registerForm = document.getElementById('registerForm');
@@ -879,18 +858,18 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Validar CPF
             if (!cpf || cpf.length !== 11) {
-                notifications.error('CPF deve ter exatamente 11 dígitos!');
+                avisos.error('CPF deve ter exatamente 11 dígitos!');
                 return;
             }
             
             // Validar se é apenas números
             if (!/^\d+$/.test(cpf)) {
-                notifications.error('CPF deve conter apenas números!');
+                avisos.error('CPF deve conter apenas números!');
                 return;
             }
 
             if (password.length < 6) {
-                notifications.error('A senha deve ter pelo menos 6 caracteres!');
+                avisos.error('A senha deve ter pelo menos 6 caracteres!');
                 return;
             }
             
@@ -902,11 +881,11 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             if (!response.ok) {
-                notifications.error(await readApiMessage(response, 'Não foi possível concluir o cadastro.'));
+                avisos.error(await readApiMessage(response, 'Não foi possível concluir o cadastro.'));
                 return;
             }
 
-            notifications.success('Cadastro concluído com sucesso! Faça login para continuar.');
+            avisos.success('Cadastro concluído com sucesso! Faça login para continuar.');
             registerForm.reset();
         });
     }
@@ -926,15 +905,15 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             if (!response.ok) {
-                notifications.error(await readApiMessage(response, 'Email ou senha incorretos.'));
+                avisos.error(await readApiMessage(response, 'Email ou senha incorretos.'));
                 return;
             }
             
             const user = await response.json();
-            userProfile.saveUserProfile(user.name, true);
-            window.cartManager?.load();
+            perfilUsuario.saveUserProfile(user.name, true);
+            window.carrinho?.load();
             
-            notifications.success('Login concluído com sucesso!');
+            avisos.success('Login concluído com sucesso!');
             const authModal = document.getElementById('authModal');
             const modalInstance = authModal ? bootstrap.Modal.getInstance(authModal) : null;
             if (modalInstance) {
@@ -947,12 +926,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Função auxiliar: verificar se usuário está logado
     async function ensureAuthenticatedResponse(response, fallbackMessage) {
         if (response.status === 401) {
-            notifications.error('Você precisa estar logado para continuar!');
+            avisos.error('Você precisa estar logado para continuar!');
             return false;
         }
 
         if (!response.ok) {
-            notifications.error(await readApiMessage(response, fallbackMessage));
+            avisos.error(await readApiMessage(response, fallbackMessage));
             return false;
         }
 
@@ -978,8 +957,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            notifications.success('Ingresso comprado com sucesso!');
-            window.userRecordsManager?.load();
+            avisos.success('Ingresso comprado com sucesso!');
+            window.registrosUsuario?.load();
             setTimeout(() => ticketForm.reset(), 500);
         });
     }
@@ -1003,8 +982,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            notifications.success('Visita agendada com sucesso!');
-            window.userRecordsManager?.load();
+            avisos.success('Visita agendada com sucesso!');
+            window.registrosUsuario?.load();
             setTimeout(() => agendaForm.reset(), 500);
         });
     }
@@ -1017,7 +996,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const product = this.closest('.product');
             const productName = product.dataset.productName || product.querySelector('h3').textContent;
-            await window.cartManager?.add({
+            await window.carrinho?.add({
                 productId: Number(product.dataset.productId),
                 productName,
                 unitPrice: Number(product.dataset.productPrice)

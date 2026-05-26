@@ -180,7 +180,7 @@
         }
 
         .notification-banner.error::before {
-            content: "✕";
+            content: "×";
             font-size: 24px;
             font-weight: bold;
             flex-shrink: 0;
@@ -255,7 +255,7 @@
                 ✓ Sucesso
             </button>
             <button class="btn-error" onclick="showError()">
-                ✕ Erro
+                × Erro
             </button>
             <button class="btn-warning" onclick="showWarning()">
                 ! Aviso
@@ -356,7 +356,7 @@
         }
 
         function showError() {
-            notifications.error('✕ Ocorreu um erro ao processar sua solicitação!');
+            notifications.error('× Ocorreu um erro ao processar sua solicitação!');
         }
 
         function showWarning() {
