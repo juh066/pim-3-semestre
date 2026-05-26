@@ -80,7 +80,6 @@ namespace AuroraGaleria.Controllers
         public async Task<IActionResult> MeusAgendamentos()
         {
             var userId = UsuarioId();
-            var today = DateTime.Today;
             var appointments = await _db.UserAppointments
                 .Where(appointment => appointment.UserId == userId)
                 .OrderByDescending(appointment => appointment.AppointmentDate)
@@ -92,7 +91,7 @@ namespace AuroraGaleria.Controllers
                 appointment.EventName,
                 Date = appointment.AppointmentDate.ToString("yyyy-MM-dd"),
                 appointment.Quantity,
-                Status = appointment.AppointmentDate.Date < today ? "past" : "available"
+                appointment.Status
             }));
         }
 
@@ -116,7 +115,7 @@ namespace AuroraGaleria.Controllers
                 EventName = request.EventName.Trim(),
                 AppointmentDate = request.VisitDate.Date,
                 Quantity = 1,
-                Status = request.VisitDate.Date < DateTime.Today ? "past" : "available",
+                Status = "Confirmado",
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -124,6 +123,29 @@ namespace AuroraGaleria.Controllers
             await _db.SaveChangesAsync();
 
             return Ok(new { message = "Visita agendada com sucesso!" });
+        }
+
+        [HttpDelete("appointments/{id:int}")]
+        public async Task<IActionResult> CancelarAgendamento(int id)
+        {
+            var userId = UsuarioId();
+            var appointment = await _db.UserAppointments
+                .SingleOrDefaultAsync(item => item.Id == id);
+
+            if (appointment == null || appointment.UserId != userId)
+            {
+                return Unauthorized();
+            }
+
+            if (!string.Equals(appointment.Status, "Confirmado", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest("Este agendamento não pode ser cancelado.");
+            }
+
+            appointment.Status = "Cancelado";
+            await _db.SaveChangesAsync();
+
+            return Ok();
         }
 
         [HttpGet("purchases")]
@@ -145,6 +167,46 @@ namespace AuroraGaleria.Controllers
                 Situation = "Confirmado • Contatando a transportadora",
                 CreatedAt = purchase.CreatedAt.ToString("yyyy-MM-dd")
             }));
+        }
+
+        [HttpGet("analytics")]
+        public async Task<IActionResult> Analytics()
+        {
+            var vendasPorProduto = await _db.UserPurchases
+                .GroupBy(purchase => purchase.ProductName)
+                .Select(group => new
+                {
+                    Produto = group.Key,
+                    Quantidade = group.Sum(purchase => purchase.Quantity),
+                    Receita = group.Sum(purchase => purchase.TotalPrice)
+                })
+                .OrderByDescending(item => item.Quantidade)
+                .ToListAsync();
+
+            var ingressosPorExposicao = await _db.UserTickets
+                .GroupBy(ticket => ticket.EventName)
+                .Select(group => new
+                {
+                    Exposicao = group.Key,
+                    Quantidade = group.Sum(ticket => ticket.Quantity)
+                })
+                .OrderByDescending(item => item.Quantidade)
+                .ToListAsync();
+
+            return Ok(new
+            {
+                VendasPorProduto = vendasPorProduto.Select(item => new
+                {
+                    item.Produto,
+                    item.Quantidade,
+                    item.Receita
+                }),
+                IngressosPorExposicao = ingressosPorExposicao.Select(item => new
+                {
+                    item.Exposicao,
+                    item.Quantidade
+                })
+            });
         }
 
         private static bool ExposicaoValida(string eventName, DateTime visitDate)

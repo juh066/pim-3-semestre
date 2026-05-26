@@ -66,7 +66,14 @@ const avisos = new Avisos();
 
 async function readApiMessage(response, fallback) {
     try {
-        const data = await response.json();
+        const text = await response.text();
+        let data = {};
+        try {
+            data = text ? JSON.parse(text) : {};
+        } catch {
+            return text || fallback;
+        }
+
         if (data.errors) {
             const messages = Object.values(data.errors).flat();
             if (messages.length > 0) {
@@ -115,6 +122,7 @@ class PerfilUsuario {
         this.userNameEl = document.getElementById('userName');
         this.userInitialsEl = document.getElementById('userInitials');
         this.userIconSvg = document.getElementById('userIconSvg');
+        this.analyticsButton = document.getElementById('analyticsButton');
         this.loggedInActions = document.getElementById('loggedInActions');
         this.authModalGrid = document.querySelector('.auth-modal-grid');
         this.logoutBtn = document.getElementById('logoutBtn');
@@ -185,6 +193,10 @@ class PerfilUsuario {
             this.userIconSvg.style.display = 'none';
         }
 
+        if (this.analyticsButton) {
+            this.analyticsButton.hidden = false;
+        }
+
         if (this.loggedInActions) {
             this.loggedInActions.hidden = false;
         }
@@ -240,6 +252,10 @@ class PerfilUsuario {
             this.userIconSvg.style.display = '';
         }
 
+        if (this.analyticsButton) {
+            this.analyticsButton.hidden = true;
+        }
+
         if (this.loggedInActions) {
             this.loggedInActions.hidden = true;
         }
@@ -293,7 +309,7 @@ class RegistrosUsuario {
                 return;
             }
 
-            this.renderList(await response.json(), listEl, emptyEl);
+            this.renderList(await response.json(), listEl, emptyEl, type);
         } catch {
             listEl.innerHTML = '';
             emptyEl.textContent = `Não foi possível carregar seus ${type}s agora.`;
@@ -301,7 +317,7 @@ class RegistrosUsuario {
         }
     }
 
-    renderList(items, listEl, emptyEl) {
+    renderList(items, listEl, emptyEl, type) {
         listEl.innerHTML = '';
         emptyEl.hidden = items.length > 0;
 
@@ -319,15 +335,86 @@ class RegistrosUsuario {
             meta.textContent = `${formatDate(item.date)} • Quantidade: ${item.quantity}`;
 
             const status = document.createElement('span');
-            status.className = `user-record-status ${item.status === 'past' ? 'is-past' : 'is-available'}`;
-            status.textContent = item.status === 'past' ? 'Indisponível / passado' : 'Disponível';
+            status.className = `user-record-status ${this.getRecordStatusClass(item.status)}`;
+            status.textContent = this.getRecordStatusLabel(item.status);
 
             content.appendChild(title);
             content.appendChild(meta);
             row.appendChild(content);
             row.appendChild(status);
+
+            if (type === 'agendamento' && this.isConfirmed(item.status)) {
+                const cancelButton = document.createElement('button');
+                cancelButton.type = 'button';
+                cancelButton.className = 'user-record-cancel';
+                cancelButton.textContent = 'Cancelar';
+                cancelButton.addEventListener('click', () => this.cancelAppointment(item.id, status, cancelButton));
+                row.appendChild(cancelButton);
+            }
+
             listEl.appendChild(row);
         });
+    }
+
+    isConfirmed(status) {
+        return String(status || '').toLowerCase() === 'confirmado';
+    }
+
+    getRecordStatusClass(status) {
+        const normalized = String(status || '').toLowerCase();
+
+        if (normalized === 'cancelado') {
+            return 'is-canceled';
+        }
+
+        if (normalized === 'past') {
+            return 'is-past';
+        }
+
+        return 'is-available';
+    }
+
+    getRecordStatusLabel(status) {
+        const normalized = String(status || '').toLowerCase();
+
+        if (normalized === 'cancelado') {
+            return 'Cancelado';
+        }
+
+        if (normalized === 'confirmado') {
+            return 'Confirmado';
+        }
+
+        return normalized === 'past' ? 'Indisponível / passado' : 'Disponível';
+    }
+
+    async cancelAppointment(id, statusEl, button) {
+        if (!id || !button) {
+            return;
+        }
+
+        button.disabled = true;
+
+        try {
+            const response = await fetch(`/user-actions/appointments/${id}`, {
+                method: 'DELETE',
+                credentials: 'same-origin'
+            });
+
+            if (!response.ok) {
+                avisos.error(await readApiMessage(response, 'Não foi possível cancelar o agendamento.'));
+                button.disabled = false;
+                return;
+            }
+
+            statusEl.className = 'user-record-status is-canceled';
+            statusEl.textContent = 'Cancelado';
+            button.remove();
+            avisos.success('Agendamento cancelado com sucesso!');
+        } catch {
+            avisos.error('Não foi possível cancelar o agendamento.');
+            button.disabled = false;
+        }
     }
 
     async loadPurchases() {

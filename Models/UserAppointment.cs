@@ -18,7 +18,7 @@ namespace AuroraGaleria.Models
 
         [Required]
         [MaxLength(20)]
-        public string Status { get; set; } = "available";
+        public string Status { get; set; } = "Confirmado";
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

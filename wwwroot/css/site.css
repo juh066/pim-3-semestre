@@ -8,6 +8,7 @@
 body {
     background: #F5F0E8;
     color: #1C1C1E;
+    padding-top: 68px;
 }
 
 html {
@@ -162,6 +163,11 @@ html {
 }
 
 header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
     background: #FFFFFF;
     border-bottom: 1px solid rgba(28,28,30,0.1) !important;
 }
@@ -183,7 +189,7 @@ header {
 .navbar-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 16px;
     margin-left: auto;
 }
 
@@ -520,6 +526,24 @@ header {
     color: #991B1B;
 }
 
+.user-record-status.is-canceled {
+    background: #E5E7EB;
+    color: #4B5563;
+}
+
+.user-record-cancel {
+    align-self: flex-start;
+    width: auto;
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+}
+
+.user-record-cancel:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .user-record-status.is-shipping-contact {
     background: #D7F0F0;
     color: #0F766E;
@@ -758,6 +782,55 @@ header {
 
 .section {
     padding: 80px 10%;
+}
+
+.analytics-page {
+    padding: 80px 0;
+}
+
+.analytics-page h1 {
+    margin-bottom: 40px;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1C1C1E;
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(280px, 420px));
+    justify-content: center;
+    gap: 30px;
+}
+
+.analytics-card {
+    min-height: 390px;
+    display: flex;
+    flex-direction: column;
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.1);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(28,28,30,0.08);
+    padding: 25px;
+    color: #1C1C1E;
+}
+
+.analytics-card h2 {
+    margin-bottom: 18px;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.analytics-loading,
+.analytics-empty {
+    margin: auto 0;
+    color: #5E5E63;
+    text-align: center;
+}
+
+.analytics-chart-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 290px;
 }
 
 .section h2,
@@ -1094,6 +1167,10 @@ footer p {
 
 @media(max-width: 900px)
 {
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
+
     .login-section {
         grid-template-columns: 1fr;
     }
