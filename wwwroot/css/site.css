@@ -853,6 +853,7 @@ form {
 }
 
 input,
+select,
 button {
     padding: 15px;
     border-radius: 10px;
@@ -860,7 +861,8 @@ button {
     font-size: 1rem;
 }
 
-input {
+input,
+select {
     background: #FFFFFF;
     color: #1C1C1E;
 }

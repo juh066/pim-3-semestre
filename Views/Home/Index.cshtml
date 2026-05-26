@@ -34,8 +34,13 @@
         <h2>Comprar Ingressos</h2>
 
         <form id="ticketForm">
-            <input type="text" placeholder="Seu nome" required>
-            <input type="date" required>
+            <select id="ticketExhibition" required>
+                <option value="">Selecione uma exposição</option>
+                <option value="Arte Contemporânea">Arte Contemporânea (15 Maio - 30 Junho)</option>
+                <option value="Modernismo Brasileiro">Modernismo Brasileiro (01 Julho - 15 Agosto)</option>
+                <option value="Fotografia Urbana">Fotografia Urbana (20 Agosto - 30 Setembro)</option>
+            </select>
+            <input id="ticketVisitDate" type="text" placeholder="Selecione uma exposição primeiro" disabled required>
             <input type="number" placeholder="Quantidade" min="1" required>
             <button type="submit">Comprar</button>
         </form>
@@ -47,9 +52,13 @@
         <h2>Agendar Visita</h2>
 
         <form id="agendaForm">
-            <input type="text" placeholder="Nome" required>
-            <input type="email" placeholder="Email" required>
-            <input type="date" required>
+            <select id="agendaExhibition" required>
+                <option value="">Selecione uma exposição</option>
+                <option value="Arte Contemporânea">Arte Contemporânea (15 Maio - 30 Junho)</option>
+                <option value="Modernismo Brasileiro">Modernismo Brasileiro (01 Julho - 15 Agosto)</option>
+                <option value="Fotografia Urbana">Fotografia Urbana (20 Agosto - 30 Setembro)</option>
+            </select>
+            <input id="agendaVisitDate" type="text" placeholder="Selecione uma exposição primeiro" disabled required>
             <button type="submit">Agendar</button>
         </form>
     </div>

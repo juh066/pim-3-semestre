@@ -938,20 +938,65 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     }
 
+    const exposicoes = {
+        'Arte Contemporânea': { inicio: '2026-05-15', fim: '2026-06-30' },
+        'Modernismo Brasileiro': { inicio: '2026-07-01', fim: '2026-08-15' },
+        'Fotografia Urbana': { inicio: '2026-08-20', fim: '2026-09-30' }
+    };
+
+    function prepararData(select, dateInput) {
+        if (!select || !dateInput) {
+            return;
+        }
+
+        const exposicao = exposicoes[select.value];
+        dateInput.value = '';
+
+        if (!exposicao) {
+            dateInput.type = 'text';
+            dateInput.placeholder = 'Selecione uma exposição primeiro';
+            dateInput.disabled = true;
+            dateInput.removeAttribute('min');
+            dateInput.removeAttribute('max');
+            return;
+        }
+
+        dateInput.type = 'date';
+        dateInput.placeholder = '';
+        dateInput.disabled = false;
+        dateInput.min = exposicao.inicio;
+        dateInput.max = exposicao.fim;
+    }
+
+    function dataValida(exposicaoNome, data) {
+        const exposicao = exposicoes[exposicaoNome];
+        return Boolean(exposicao && data && data >= exposicao.inicio && data <= exposicao.fim);
+    }
+
     // Formulário de Compra de Ingressos - REQUER LOGIN
     const ticketForm = document.getElementById('ticketForm');
     if (ticketForm) {
+        const exhibitionSelect = document.getElementById('ticketExhibition');
+        const dateInput = document.getElementById('ticketVisitDate');
+        exhibitionSelect?.addEventListener('change', () => prepararData(exhibitionSelect, dateInput));
+        prepararData(exhibitionSelect, dateInput);
+
         ticketForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const nameInput = this.querySelector('input[type="text"]');
-            const dateInput = this.querySelector('input[type="date"]');
             const quantityInput = this.querySelector('input[type="number"]');
+            const eventName = exhibitionSelect ? exhibitionSelect.value : '';
+            const visitDate = dateInput ? dateInput.value : '';
+
+            if (!dataValida(eventName, visitDate)) {
+                avisos.error('Escolha uma data dentro do período da exposição.');
+                return;
+            }
+
             const response = await postJson('/user-actions/tickets', {
-                visitorName: nameInput ? nameInput.value : '',
-                visitDate: dateInput ? dateInput.value : '',
+                visitDate,
                 quantity: quantityInput ? Number(quantityInput.value) : 1,
-                eventName: 'Galeria Aurora'
+                eventName
             });
             if (!await ensureAuthenticatedResponse(response, 'Não foi possível comprar o ingresso.')) {
                 return;
@@ -959,24 +1004,35 @@ document.addEventListener('DOMContentLoaded', function() {
             
             avisos.success('Ingresso comprado com sucesso!');
             window.registrosUsuario?.load();
-            setTimeout(() => ticketForm.reset(), 500);
+            setTimeout(() => {
+                ticketForm.reset();
+                prepararData(exhibitionSelect, dateInput);
+            }, 500);
         });
     }
 
     // Formulário de Agendamento de Visita - REQUER LOGIN
     const agendaForm = document.getElementById('agendaForm');
     if (agendaForm) {
+        const exhibitionSelect = document.getElementById('agendaExhibition');
+        const dateInput = document.getElementById('agendaVisitDate');
+        exhibitionSelect?.addEventListener('change', () => prepararData(exhibitionSelect, dateInput));
+        prepararData(exhibitionSelect, dateInput);
+
         agendaForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const nameInput = this.querySelector('input[type="text"]');
-            const emailInput = this.querySelector('input[type="email"]');
-            const dateInput = this.querySelector('input[type="date"]');
+            const eventName = exhibitionSelect ? exhibitionSelect.value : '';
+            const visitDate = dateInput ? dateInput.value : '';
+
+            if (!dataValida(eventName, visitDate)) {
+                avisos.error('Escolha uma data dentro do período da exposição.');
+                return;
+            }
+
             const response = await postJson('/user-actions/appointments', {
-                visitorName: nameInput ? nameInput.value : '',
-                email: emailInput ? emailInput.value : '',
-                visitDate: dateInput ? dateInput.value : '',
-                eventName: 'Visita à Galeria Aurora'
+                visitDate,
+                eventName
             });
             if (!await ensureAuthenticatedResponse(response, 'Não foi possível agendar a visita.')) {
                 return;
@@ -984,7 +1040,10 @@ document.addEventListener('DOMContentLoaded', function() {
             
             avisos.success('Visita agendada com sucesso!');
             window.registrosUsuario?.load();
-            setTimeout(() => agendaForm.reset(), 500);
+            setTimeout(() => {
+                agendaForm.reset();
+                prepararData(exhibitionSelect, dateInput);
+            }, 500);
         });
     }
 

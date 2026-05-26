@@ -12,6 +12,13 @@ namespace AuroraGaleria.Controllers
     [Route("user-actions")]
     public class UserActionsController : ControllerBase
     {
+        private static readonly Dictionary<string, (DateTime Inicio, DateTime Fim)> Exposicoes = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Arte Contemporânea"] = (new DateTime(2026, 5, 15), new DateTime(2026, 6, 30)),
+            ["Modernismo Brasileiro"] = (new DateTime(2026, 7, 1), new DateTime(2026, 8, 15)),
+            ["Fotografia Urbana"] = (new DateTime(2026, 8, 20), new DateTime(2026, 9, 30))
+        };
+
         private readonly AppDbContext _db;
 
         public UserActionsController(AppDbContext db)
@@ -47,11 +54,16 @@ namespace AuroraGaleria.Controllers
                 return BadRequest(new { message = "Preencha a data e a quantidade do ingresso corretamente." });
             }
 
+            if (!ExposicaoValida(request.EventName, request.VisitDate))
+            {
+                return BadRequest(new { message = "Escolha uma exposição e uma data dentro do período disponível." });
+            }
+
             var userId = UsuarioId();
             var ticket = new UserTicket
             {
                 UserId = userId,
-                EventName = string.IsNullOrWhiteSpace(request.EventName) ? "Galeria Aurora" : request.EventName.Trim(),
+                EventName = request.EventName.Trim(),
                 EventDate = request.VisitDate.Date,
                 Quantity = request.Quantity,
                 Status = request.VisitDate.Date < DateTime.Today ? "past" : "available",
@@ -92,11 +104,16 @@ namespace AuroraGaleria.Controllers
                 return BadRequest(new { message = "Preencha os dados do agendamento corretamente." });
             }
 
+            if (!ExposicaoValida(request.EventName, request.VisitDate))
+            {
+                return BadRequest(new { message = "Escolha uma exposição e uma data dentro do período disponível." });
+            }
+
             var userId = UsuarioId();
             var appointment = new UserAppointment
             {
                 UserId = userId,
-                EventName = string.IsNullOrWhiteSpace(request.EventName) ? "Visita à Galeria Aurora" : request.EventName.Trim(),
+                EventName = request.EventName.Trim(),
                 AppointmentDate = request.VisitDate.Date,
                 Quantity = 1,
                 Status = request.VisitDate.Date < DateTime.Today ? "past" : "available",
@@ -128,6 +145,17 @@ namespace AuroraGaleria.Controllers
                 Situation = "Confirmado • Contatando a transportadora",
                 CreatedAt = purchase.CreatedAt.ToString("yyyy-MM-dd")
             }));
+        }
+
+        private static bool ExposicaoValida(string eventName, DateTime visitDate)
+        {
+            if (string.IsNullOrWhiteSpace(eventName) || !Exposicoes.TryGetValue(eventName.Trim(), out var periodo))
+            {
+                return false;
+            }
+
+            var data = visitDate.Date;
+            return data >= periodo.Inicio && data <= periodo.Fim;
         }
 
         private int UsuarioId()
