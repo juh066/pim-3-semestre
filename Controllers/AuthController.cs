@@ -62,7 +62,7 @@ namespace AuroraGaleria.Controllers
             {
                 return StatusCode(StatusCodes.Status503ServiceUnavailable, new
                 {
-                    message = "Banco de dados indisponível. Verifique se o SQL Server LocalDB está instalado e se a conexão DefaultConnection está correta."
+                    message = "Banco de dados indisponível. Verifique se o arquivo SQLite e a conexão DefaultConnection estão corretos."
                 });
             }
         }

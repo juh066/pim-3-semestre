@@ -1,6 +1,3 @@
-﻿// Avisos simples usados nas ações do site.
-
-
 class Avisos {
     constructor() {
         this.container = document.getElementById('notificationContainer');
@@ -23,8 +20,6 @@ class Avisos {
         notification.appendChild(closeBtn);
         
         this.container.appendChild(notification);
-        
-        // Auto-remove após o tempo especificado
         if (duration > 0) {
             setTimeout(() => this.remove(notification), duration);
         }
@@ -114,7 +109,6 @@ function formatDate(value) {
     return new Date(year, month - 1, day).toLocaleDateString('pt-BR');
 }
 
-// Perfil e dados do usuário logado.
 
 class PerfilUsuario {
     constructor() {
@@ -142,10 +136,6 @@ class PerfilUsuario {
         
         this.loadUserProfile();
     }
-
-    /**
-     * Salva o perfil do usuário APÓS LOGIN (não após cadastro)
-     */
     saveUserProfile(name, isLogin = false) {
         if (name && name.trim()) {
             if (isLogin) {
@@ -153,11 +143,6 @@ class PerfilUsuario {
             }
         }
     }
-
-    /**
-     * Carrega o perfil do usuário (ao abrir página)
-     * Só exibe se estava com login anterior
-     */
     async loadUserProfile() {
         try {
             const response = await fetch('/auth/me', { credentials: 'same-origin' });
@@ -173,10 +158,6 @@ class PerfilUsuario {
             this.clearUserProfile();
         }
     }
-
-    /**
-     * Exibe o perfil do usuário no botão da navbar
-     */
     displayUserProfile(name) {
         if (this.profileIcon && this.userNameEl) {
             this.userNameEl.textContent = name;
@@ -217,10 +198,6 @@ class PerfilUsuario {
             .map(part => part.charAt(0).toUpperCase())
             .join('');
     }
-
-    /**
-     * Remove o perfil do usuário (logout)
-     */
     logout() {
         this.logoutAsync();
     }
@@ -269,7 +246,6 @@ class PerfilUsuario {
     }
 }
 
-// Inicializar gerenciador de perfil global
 const perfilUsuario = new PerfilUsuario();
 
 class RegistrosUsuario {
@@ -707,7 +683,6 @@ class Pagamento {
     }
 }
 
-// Carrinho de compras.
 
 class Carrinho {
     constructor() {
@@ -921,20 +896,16 @@ class Carrinho {
     }
 }
 
-// Formulários da página.
-
 document.addEventListener('DOMContentLoaded', function() {
     window.registrosUsuario = new RegistrosUsuario();
     window.pagamento = new Pagamento();
     window.carrinho = new Carrinho();
 
-    // Formulário de Cadastro - NÃO mostra ícone
     const registerForm = document.getElementById('registerForm');
     if (registerForm) {
         registerForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // Obter dados do formulário
             const nameInput = this.querySelector('input[type="text"]');
             const cpfInput = document.getElementById('cpfInput');
             const emailInput = this.querySelector('input[type="email"]');
@@ -943,13 +914,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const cpf = cpfInput ? cpfInput.value : '';
             const password = passwordInput ? passwordInput.value : '';
             
-            // Validar CPF
             if (!cpf || cpf.length !== 11) {
                 avisos.error('CPF deve ter exatamente 11 dígitos!');
                 return;
             }
             
-            // Validar se é apenas números
             if (!/^\d+$/.test(cpf)) {
                 avisos.error('CPF deve conter apenas números!');
                 return;
@@ -977,13 +946,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Formulário de Login - MOSTRA ícone
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
         loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // Obter o email 
             const emailInput = this.querySelector('input[type="email"]');
             const passwordInput = this.querySelector('input[type="password"]');
             const response = await postJson('/auth/login', {
@@ -1010,7 +977,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Função auxiliar: verificar se usuário está logado
     async function ensureAuthenticatedResponse(response, fallbackMessage) {
         if (response.status === 401) {
             avisos.error('Você precisa estar logado para continuar!');
@@ -1060,7 +1026,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return Boolean(exposicao && data && data >= exposicao.inicio && data <= exposicao.fim);
     }
 
-    // Formulário de Compra de Ingressos - REQUER LOGIN
     const ticketForm = document.getElementById('ticketForm');
     if (ticketForm) {
         const exhibitionSelect = document.getElementById('ticketExhibition');
@@ -1098,7 +1063,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Formulário de Agendamento de Visita - REQUER LOGIN
     const agendaForm = document.getElementById('agendaForm');
     if (agendaForm) {
         const exhibitionSelect = document.getElementById('agendaExhibition');
@@ -1133,8 +1097,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 500);
         });
     }
-
-    // Botões de compra da loja - REQUER LOGIN
     const shopButtons = document.querySelectorAll('.product button');
     shopButtons.forEach(button => {
         button.addEventListener('click', async function(e) {
@@ -1151,4 +1113,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Write your JavaScript code.

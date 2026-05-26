@@ -12,13 +12,6 @@ namespace AuroraGaleria.Controllers
     [Route("user-actions")]
     public class UserActionsController : ControllerBase
     {
-        private static readonly Dictionary<string, (DateTime Inicio, DateTime Fim)> Exposicoes = new(StringComparer.OrdinalIgnoreCase)
-        {
-            ["Arte Contemporânea"] = (new DateTime(2026, 5, 15), new DateTime(2026, 6, 30)),
-            ["Modernismo Brasileiro"] = (new DateTime(2026, 7, 1), new DateTime(2026, 8, 15)),
-            ["Fotografia Urbana"] = (new DateTime(2026, 8, 20), new DateTime(2026, 9, 30))
-        };
-
         private readonly AppDbContext _db;
 
         public UserActionsController(AppDbContext db)
@@ -183,11 +176,12 @@ namespace AuroraGaleria.Controllers
                 .OrderByDescending(item => item.Quantidade)
                 .ToListAsync();
 
+            var exposicoesValidas = ExposicoesCatalogo.Todas
+                .Select(exposicao => exposicao.Titulo)
+                .ToList();
+
             var ingressosPorExposicao = await _db.UserTickets
-                .Where(ticket =>
-                    ticket.EventName == "Arte Contemporânea" ||
-                    ticket.EventName == "Modernismo Brasileiro" ||
-                    ticket.EventName == "Fotografia Urbana")
+                .Where(ticket => exposicoesValidas.Contains(ticket.EventName))
                 .GroupBy(ticket => ticket.EventName)
                 .Select(group => new
                 {
@@ -215,13 +209,12 @@ namespace AuroraGaleria.Controllers
 
         private static bool ExposicaoValida(string eventName, DateTime visitDate)
         {
-            if (string.IsNullOrWhiteSpace(eventName) || !Exposicoes.TryGetValue(eventName.Trim(), out var periodo))
+            if (string.IsNullOrWhiteSpace(eventName))
             {
                 return false;
             }
 
-            var data = visitDate.Date;
-            return data >= periodo.Inicio && data <= periodo.Fim;
+            return ExposicoesCatalogo.DataValida(eventName, visitDate);
         }
 
         private int UsuarioId()
