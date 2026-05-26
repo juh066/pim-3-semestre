@@ -1,0 +1,91 @@
+﻿@model List<AuroraGaleria.Models.Exposicao>
+
+@{
+    ViewData["Title"] = "Galeria Aurora";
+}
+
+<section class="hero">
+    <div class="hero-content">
+        <h1>GALERIA AURORA</h1>
+        <p>Arte contemporânea e experiências imersivas.</p>
+        <a href="#exposicoes" class="btn-main">Explorar</a>
+    </div>
+</section>
+
+<section id="exposicoes" class="section">
+    <h2>Exposições</h2>
+  <div class="cards">
+        @foreach (var expo in Model)
+        {
+            <div class="card">
+                <img src="@expo.ImagemUrl" alt="@expo.Titulo">
+                <div class="card-content">
+                    <h3>@expo.Titulo</h3>
+                    <p>@expo.Descricao</p>
+                    <span>@expo.Data</span>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+<section id="comprar-ingressos" class="tickets">
+    <div class="ticket-box">
+        <h2>Comprar Ingressos</h2>
+
+        <form id="ticketForm">
+            <input type="text" placeholder="Seu nome" required>
+            <input type="date" required>
+            <input type="number" placeholder="Quantidade" min="1" required>
+            <button type="submit">Comprar</button>
+        </form>
+    </div>
+</section>
+
+<section id="agendar-visita" class="agenda">
+    <div class="agenda-box">
+        <h2>Agendar Visita</h2>
+
+        <form id="agendaForm">
+            <input type="text" placeholder="Nome" required>
+            <input type="email" placeholder="Email" required>
+            <input type="date" required>
+            <button type="submit">Agendar</button>
+        </form>
+    </div>
+</section>
+<section id="lojinha" class="shop">
+    <h2>Lojinha</h2>
+
+    <div class="shop-grid">
+        <div class="product" data-product-id="1" data-product-name="Caneca Aurora" data-product-price="49.90">
+            <div class="product-image-frame">
+                <img src="/images/caneca.jpg" alt="Caneca Aurora">
+            </div>
+            <h3>Caneca Aurora</h3>
+            <p>R$ 49,90</p>
+            <button type="button">Comprar</button>
+        </div>
+
+        <div class="product" data-product-id="2" data-product-name="Tote Bag" data-product-price="69.90">
+            <div class="product-image-frame">
+                <img src="/images/totebag.jpg" alt="Tote Bag">
+            </div>
+            <h3>Tote Bag</h3>
+            <p>R$ 69,90</p>
+            <button type="button">Comprar</button>
+        </div>
+
+        <div class="product" data-product-id="3" data-product-name="Caderno Artístico" data-product-price="39.90">
+            <div class="product-image-frame">
+                <img src="/images/caderno.jpg" alt="Caderno Artístico">
+            </div>
+            <h3>Caderno Artístico</h3>
+            <p>R$ 39,90</p>
+            <button type="button">Comprar</button>
+        </div>
+    </div>
+</section>
+<footer>
+    <p>Galeria Aurora © 2026 — Arte contemporânea para todos.</p>
+</footer>
