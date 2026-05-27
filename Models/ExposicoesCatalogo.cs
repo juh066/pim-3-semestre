@@ -5,23 +5,23 @@ namespace AuroraGaleria.Models
         public static readonly IReadOnlyList<ExposicaoInfo> Todas = new List<ExposicaoInfo>
         {
             new(
-                "Arte Contemporânea",
-                "Uma experiência visual moderna.",
-                "/images/expo1.jpg",
+                "Jean-Michel Basquiat",
+                "",
+                "/images/basquiat.jpeg",
                 "15 Maio - 30 Junho",
                 new DateTime(2026, 5, 15),
                 new DateTime(2026, 6, 30)),
             new(
-                "Modernismo Brasileiro",
-                "Grandes artistas brasileiros.",
-                "/images/expo2.jpg",
+                "Takashi Murakami",
+                "",
+                "/images/Takashi.jpeg",
                 "01 Julho - 15 Agosto",
                 new DateTime(2026, 7, 1),
                 new DateTime(2026, 8, 15)),
             new(
-                "Fotografia Urbana",
-                "A cidade através da arte.",
-                "/images/expo3.jpg",
+                "Banksy",
+                "",
+                "/images/bansky.jpeg",
                 "20 Agosto - 30 Setembro",
                 new DateTime(2026, 8, 20),
                 new DateTime(2026, 9, 30))

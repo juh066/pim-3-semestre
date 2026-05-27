@@ -985,8 +985,15 @@ button:hover {
     display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
 }
+
+.product[data-product-name="Caneca Aurora"] .product-image-frame img {
+    width: 88%;
+    height: 88%;
+    margin: 6% auto;
+}
+
 .product h3 {
     margin-top: 15px;
     margin-bottom: 10px;

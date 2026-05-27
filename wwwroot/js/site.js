@@ -992,9 +992,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     const exposicoes = {
-        'Arte Contemporânea': { inicio: '2026-05-15', fim: '2026-06-30' },
-        'Modernismo Brasileiro': { inicio: '2026-07-01', fim: '2026-08-15' },
-        'Fotografia Urbana': { inicio: '2026-08-20', fim: '2026-09-30' }
+        'Jean-Michel Basquiat': { inicio: '2026-05-15', fim: '2026-06-30' },
+        'Takashi Murakami': { inicio: '2026-07-01', fim: '2026-08-15' },
+        'Banksy': { inicio: '2026-08-20', fim: '2026-09-30' }
     };
 
     function prepararData(select, dateInput) {
