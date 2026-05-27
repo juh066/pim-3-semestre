@@ -173,8 +173,15 @@ header {
 }
 
 .navbar {
+    align-items: center;
     background: #FFFFFF !important;
     border-bottom: 1px solid rgba(28,28,30,0.1) !important;
+}
+
+.navbar .container-fluid,
+.navbar-collapse,
+.navbar-nav {
+    align-items: center;
 }
 
 .navbar-light {
@@ -183,7 +190,19 @@ header {
 
 .navbar-brand,
 .nav-link {
+    display: inline-flex;
+    align-items: center;
     color: #1C1C1E !important;
+}
+
+.navbar-brand {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.nav-link {
+    padding-top: 0;
+    padding-bottom: 0;
 }
 
 .navbar-actions {
@@ -741,9 +760,11 @@ header {
 }
 
 .hero {
+    width: 100vw;
     height: 100vh;
-    background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
-    url('/images/hero.jpg');
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    background-image: linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)), url('/images/murakami_hero.jpg');
     background-size: cover;
     background-position: center;
 
